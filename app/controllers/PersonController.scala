@@ -3,12 +3,14 @@ package controllers
 import javax.inject._
 
 import models._
-import play.api.data.Form
+import play.api.data.{Form, Forms}
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 import play.api.i18n._
 import play.api.libs.json.Json
 import play.api.mvc._
+
+import be.venneborg.refined.play.RefinedForms._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -22,8 +24,8 @@ class PersonController @Inject()(repo: PersonRepository,
    */
   val personForm: Form[CreatePersonForm] = Form {
     mapping(
-      "name" -> nonEmptyText,
-      "age" -> number.verifying(min(0), max(140))
+      "name" -> Forms.of[Name],
+      "age"  -> Forms.of[Age]
     )(CreatePersonForm.apply)(CreatePersonForm.unapply)
   }
 
@@ -75,4 +77,4 @@ class PersonController @Inject()(repo: PersonRepository,
  * in a different way to your models.  In this case, it doesn't make sense to have an id parameter in the form, since
  * that is generated once it's created.
  */
-case class CreatePersonForm(name: String, age: Int)
+case class CreatePersonForm(name: Name, age: Age)
