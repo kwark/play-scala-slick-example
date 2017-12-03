@@ -2,7 +2,6 @@ package models
 
 import javax.inject.{ Inject, Singleton }
 import play.api.db.slick.DatabaseConfigProvider
-import slick.jdbc.JdbcProfile
 
 import models.Person
 
@@ -16,12 +15,13 @@ import scala.concurrent.{ Future, ExecutionContext }
 @Singleton
 class PersonRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) {
   // We want the JdbcProfile for this provider
-  private val dbConfig = dbConfigProvider.get[JdbcProfile]
+  private val dbConfig = dbConfigProvider.get[RefinedSlickProfile]
 
   // These imports are important, the first one brings db into scope, which will let you do the actual db operations.
   // The second one brings the Slick DSL into scope, which lets you define the table and other queries.
   import dbConfig._
   import profile.api._
+  import profile.mapping._
 
   /**
    * Here we define the table. It will have a name of people
@@ -32,10 +32,10 @@ class PersonRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(impl
     def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
 
     /** The name column */
-    def name = column[String]("name")
+    def name = column[Name]("name")
 
     /** The age column */
-    def age = column[Int]("age")
+    def age = column[Age]("age")
 
     /**
      * This is the tables default "projection".
@@ -59,7 +59,7 @@ class PersonRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(impl
    * This is an asynchronous operation, it will return a future of the created person, which can be used to obtain the
    * id for that person.
    */
-  def create(name: String, age: Int): Future[Person] = db.run {
+  def create(name: Name, age: Age): Future[Person] = db.run {
     // We create a projection of just the name and age columns, since we're not inserting a value for the id column
     (people.map(p => (p.name, p.age))
       // Now define it to return the id, because we want to know what id was generated for the person
